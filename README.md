@@ -9,7 +9,7 @@
   <p align="center">
     A PDF Document Query Bot
     <br />
-    <a href="https://github.com/Ya-Tin/PDFQueryChatLM">View Demo</a>
+    <a href="https://paqbot.streamlit.app/">View Demo</a>
   </p>
 </div>
 <!-- TABLE OF CONTENTS -->
