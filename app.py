@@ -71,41 +71,47 @@ def user_input(user_question):
 
 def main():
     st.set_page_config(page_title="PAQ Bot", page_icon="🤖")
-    # st.write(css, unsafe_allow_html=True)
-    # Initialize chat history
+    
+    # Initialize session state for messages and vector store flag
     if "messages" not in st.session_state:
         st.session_state["messages"] = [{"role": "assistant", "content": "How can I help you?"}]
+    if "vector_store_ready" not in st.session_state:
+        st.session_state["vector_store_ready"] = False
 
     st.header("🤖 PAQ Bot")
 
     # Display chat messages
-    for msg in st.session_state["messages"]:
-        st.chat_message(msg["role"]).write(msg["content"])
+    
 
-    # Chat input box
-    user_question = st.chat_input("Input your Query here and Press 'Process Query' button")
-    if user_question:
-        user_input(user_question)
-
-    # Sidebar
+    # Sidebar for document upload
     with st.sidebar:
         st.header("PAQ Bot")
         st.subheader("Your Documents")
         pdf_docs = st.file_uploader("Pick a PDF file", type="pdf", accept_multiple_files=True)
-        if st.button("Process Query") and pdf_docs:
-            with st.spinner("Processing"):
-                # Get the pdf text
+        if pdf_docs and st.session_state["vector_store_ready"] == False:
+            with st.spinner("Processing uploaded documents..."):
                 raw_text = get_pdf_text(pdf_docs)
-                # Get the text chunks
                 text_chunks = chonky(raw_text)
-                # Create the vector store
-                vector_store = get_vectorstore(text_chunks)
-                # Notify user
-                st.success("Done")
-        if not pdf_docs:
+                get_vectorstore(text_chunks)
+                st.session_state["vector_store_ready"] = True
+
+        # if st.session_state["vector_store_ready"] == True:
+        #     st.success("Documents processed! You can now ask queries.")
+
+        if not st.session_state["vector_store_ready"]:
             st.info("Please upload a PDF file to start.")
-        st.write("Made with ❤️ by PEC ACM")
-        "[View the source code](https://github.com/Ya-Tin/PDFQueryChatLM.git)"
+
+    for msg in st.session_state["messages"]:
+        st.chat_message(msg["role"]).write(msg["content"])
+    # Chat input box
+    user_question = st.chat_input("Input your query here")
+    if user_question:
+        if st.session_state["vector_store_ready"]:
+            # Process the query immediately if vector store is ready
+            user_input(user_question)
+        else:
+            st.error("Please upload and process a PDF before asking questions.")
+
 
 if __name__ == "__main__":
     main()
