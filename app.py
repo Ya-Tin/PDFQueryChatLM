@@ -65,34 +65,28 @@ def user_input(user_question):
         {"input_documents": docs, "question": user_question},
         return_only_outputs=True
     )
-    # Append to the session state to maintain chat history
-    st.session_state["messages"].append({"role": "user", "content": user_question})
-    st.session_state["messages"].append({"role": "assistant", "content": response["output_text"]})
+    return response["output_text"]
 
 def main():
     st.set_page_config(page_title="PAQ Bot", page_icon="🤖")
     # st.write(css, unsafe_allow_html=True)
     # Initialize chat history
     if "messages" not in st.session_state:
-        st.session_state["messages"] = [{"role": "assistant", "content": "How can I help you?"}]
+        st.session_state["messages"] = [
+            {"role": "assistant", "content": "How can I help you?"}
+        ]
 
     st.header("🤖 PAQ Bot")
 
     # Display chat messages
     for msg in st.session_state["messages"]:
         st.chat_message(msg["role"]).write(msg["content"])
-
-    # Chat input box
-    user_question = st.chat_input("Input your Query here and Press 'Process Query' button")
-    if user_question:
-        user_input(user_question)
-
     # Sidebar
     with st.sidebar:
         st.header("PAQ Bot")
         st.subheader("Your Documents")
         pdf_docs = st.file_uploader("Pick a PDF file", type="pdf", accept_multiple_files=True)
-        if st.button("Process Query") and pdf_docs:
+        if pdf_docs and st.button("Process Documents"):
             with st.spinner("Processing"):
                 # Get the pdf text
                 raw_text = get_pdf_text(pdf_docs)
@@ -106,6 +100,22 @@ def main():
             st.info("Please upload a PDF file to start.")
         st.write("Made with ❤️ by PEC ACM")
         "[View the source code](https://github.com/Ya-Tin/PDFQueryChatLM.git)"
+    
+    # Chat input box
+    user_question = st.chat_input("Input your Query here and Press 'Process Query' button")
+    if user_question:
+        # Append user message first
+        st.session_state["messages"].append({"role": "user", "content": user_question})        
+        # Display user message immediately
+        st.chat_message("user").markdown(user_question)
+            
+        # Generate response
+        with st.spinner("Generating response..."):
+                response = user_input(user_question)
+            
+            # Append assistant's response and display it
+        st.session_state["messages"].append({"role": "assistant", "content": response})
+        st.chat_message("assistant").markdown(response)
 
 if __name__ == "__main__":
     main()
