@@ -1,21 +1,19 @@
 import streamlit as st
+import os 
+import shutil
 from dotenv import load_dotenv
 from PyPDF2 import PdfReader
+# from htmltemplates import css
 from langchain.text_splitter import CharacterTextSplitter
+from langchain.chains.combine_documents import create_stuff_documents_chain
+from langchain_core.prompts import ChatPromptTemplate
 from langchain_community.vectorstores import FAISS
-# from htmltemplates import css, bot_template, user_template
-from langchain_google_genai import GoogleGenerativeAIEmbeddings
-from langchain_google_genai import ChatGoogleGenerativeAI
+from langchain_google_genai import GoogleGenerativeAIEmbeddings, ChatGoogleGenerativeAI
 import google.generativeai as genai
-from langchain.chains.question_answering import load_qa_chain
-from langchain.prompts import PromptTemplate
-import os
-
 
 load_dotenv()
 os.getenv("GOOGLE_API_KEY")
 genai.configure(api_key=os.getenv("GOOGLE_API_KEY"))
-
 
 def get_pdf_text(pdf_docs):
     text=""
@@ -40,39 +38,38 @@ def get_vectorstore(text_chunks):
     vector_store.save_local("faiss_index")
 
 def get_conversational_chain():
-    prompt_template = """
+    model = ChatGoogleGenerativeAI(model="gemini-pro", temperature=0.7)
+    prompt = ChatPromptTemplate.from_template("""
     Try using Context for finding answer, but if the answer is not available in the context, reply with "Not enough information is available in the documents provided, but I can get an answer based on the Internet knowledge" and generate a response using Internet data.
-
     Context:
     {context}
-
     Question:
     {question}
-
-    Answer:
-    """
-    model = ChatGoogleGenerativeAI(model="gemini-pro", temperature=0.7)
-    prompt = PromptTemplate(template = prompt_template, input_variables = ["context", "question"])
-    chain = load_qa_chain(model, chain_type="stuff", prompt=prompt)
+    """)
+    chain = create_stuff_documents_chain(model, prompt)
     return chain
-
 def user_input(user_question):
     embeddings = GoogleGenerativeAIEmbeddings(model="models/embedding-001")
     new_db = FAISS.load_local("faiss_index", embeddings, allow_dangerous_deserialization=True)
     docs = new_db.similarity_search(user_question)
     chain = get_conversational_chain()
-
     st.session_state["chat_history"].append({"user:", user_question})
-    
 
-    response = chain(
-        {"input_documents": docs, "question": st.session_state["chat_history"]},
+    response = chain.invoke(
+        {"context": docs, "question": st.session_state["chat_history"]},
         return_only_outputs=True
     )
 
-    st.session_state["chat_history"].append({"bot": response["output_text"]})
+    st.session_state["chat_history"].append({"bot": response})
 
-    return response["output_text"]
+    return response
+
+def delete_faiss_index():
+    if os.path.exists("faiss_index"):
+        shutil.rmtree("faiss_index")
+        st.success("Cleaned up the cache")
+    else:
+        st.warning("Cache file doesn't exist")
 
 def main():
     st.set_page_config(page_title="PAQ Bot", page_icon="🤖")
@@ -109,7 +106,8 @@ def main():
             st.info("Please upload a PDF file to start.")
         st.write("Made with ❤️ by PEC ACM")
         "[View the source code](https://github.com/Ya-Tin/PDFQueryChatLM.git)"
-    
+        if st.button("Reset Bot Memory"):
+            delete_faiss_index()
     # Chat input box
     user_question = st.chat_input("Input your Query here and Press 'Process Query' button")
     if user_question:
