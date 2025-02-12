@@ -48,9 +48,7 @@ These are the python libraries used in this project:
 * Langchain
 * Streamlit
 * PyPDF2
-* Pickle
  
-
 <!-- GETTING STARTED -->
 ## Getting Started
 
@@ -74,7 +72,7 @@ This is an example of how to list things you need to use the software and how to
    ```
 3. Run the Run.bat file
    ``` sh
-    .\Run
+    .\run.bat
     ```
 <!-- USAGE EXAMPLES -->
 ## Usage

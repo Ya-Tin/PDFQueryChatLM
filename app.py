@@ -11,6 +11,7 @@ from langchain_community.vectorstores import FAISS
 from langchain_google_genai import GoogleGenerativeAIEmbeddings, ChatGoogleGenerativeAI
 import google.generativeai as genai
 
+
 load_dotenv()
 os.getenv("GOOGLE_API_KEY")
 genai.configure(api_key=os.getenv("GOOGLE_API_KEY"))
@@ -66,7 +67,12 @@ def user_input(user_question):
 
 def delete_faiss_index():
     if os.path.exists("faiss_index"):
-        shutil.rmtree("faiss_index")
+        for root, dirs, files in os.walk("faiss_index", topdown=False):
+            for name in files:
+                os.remove(os.path.join(root, name))
+            for name in dirs:
+                os.rmdir(os.path.join(root, name))
+        os.rmdir("faiss_index")
         st.success("Cleaned up the cache")
     else:
         st.warning("Cache file doesn't exist")
@@ -104,10 +110,21 @@ def main():
                 st.success("Done")
         if not pdf_docs:
             st.info("Please upload a PDF file to start.")
+        st.write("---")
+        st.write("")
+        st.write("")
+        st.write("")
+        st.write("")
+        st.write("")
+        st.write("")
+        st.write("")
+        st.write("")
         st.write("Made with ❤️ by PEC ACM")
         "[View the source code](https://github.com/Ya-Tin/PDFQueryChatLM.git)"
         if st.button("Reset Bot Memory"):
             delete_faiss_index()
+        if st.button("Stop App"):
+            os._exit(0)
     # Chat input box
     user_question = st.chat_input("Input your Query here and Press 'Process Query' button")
     if user_question:
