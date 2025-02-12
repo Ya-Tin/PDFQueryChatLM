@@ -72,10 +72,9 @@ This is an example of how to list things you need to use the software and how to
    ```sh
     pip install .\requirements.txt
    ```
-
-3. Run the app.py file using streamlit
+3. Run the Run.bat file
    ``` sh
-    streamlit run app.py
+    .\Run
     ```
 <!-- USAGE EXAMPLES -->
 ## Usage
