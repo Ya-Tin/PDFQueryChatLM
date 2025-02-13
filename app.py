@@ -10,11 +10,16 @@ from langchain_core.prompts import ChatPromptTemplate
 from langchain_community.vectorstores import FAISS
 from langchain_google_genai import GoogleGenerativeAIEmbeddings, ChatGoogleGenerativeAI
 import google.generativeai as genai
+import pathlib
 
 
 load_dotenv()
 os.getenv("GOOGLE_API_KEY")
 genai.configure(api_key=os.getenv("GOOGLE_API_KEY"))
+
+def load_css(file_path):
+    with open(file_path) as f:
+        st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
 
 def get_pdf_text(pdf_docs):
     text=""
@@ -79,6 +84,8 @@ def delete_faiss_index():
 
 def main():
     st.set_page_config(page_title="PAQ Bot", page_icon="🤖")
+    css_path = pathlib.Path("style.css")
+    load_css(css_path)
     # st.write(css, unsafe_allow_html=True)
     # Initialize chat history
     if "messages" not in st.session_state:
@@ -98,7 +105,7 @@ def main():
         st.header("PAQ Bot")
         st.subheader("Your Documents")
         pdf_docs = st.file_uploader("Pick a PDF file", type="pdf", accept_multiple_files=True)
-        if pdf_docs and st.button("Process Documents"):
+        if pdf_docs and st.button("Process Documents", key="green"):
             with st.spinner("Processing"):
                 # Get the pdf text
                 raw_text = get_pdf_text(pdf_docs)
@@ -111,20 +118,14 @@ def main():
         if not pdf_docs:
             st.info("Please upload a PDF file to start.")
         st.write("---")
-        st.write("")
-        st.write("")
-        st.write("")
-        st.write("")
-        st.write("")
-        st.write("")
-        st.write("")
-        st.write("")
-        st.write("Made with ❤️ by PEC ACM")
-        "[View the source code](https://github.com/Ya-Tin/PDFQueryChatLM.git)"
-        if st.button("Reset Bot Memory"):
+        st.markdown('<div class="blanki"></div>', unsafe_allow_html=True)
+        st.markdown('<div class="luvacm">Made with ❤️ by PEC ACM </div>', unsafe_allow_html=True)
+        st.markdown('<a href="https://github.com/Ya-Tin/PDFQueryChatLM.git" class="luvacm">View the source code</a>', unsafe_allow_html=True)
+        if st.button("Reset Bot Memory", key="red"):
             delete_faiss_index()
-        if st.button("Stop App"):
+        if st.button("Stop App", key="red2"):
             os._exit(0)
+        
     # Chat input box
     user_question = st.chat_input("Input your Query here and Press 'Process Query' button")
     if user_question:
