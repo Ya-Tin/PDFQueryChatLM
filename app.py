@@ -95,16 +95,16 @@ def main():
     if "chat_history" not in st.session_state:
         st.session_state["chat_history"] = []
 
-    st.header("🤖 PAQ Bot")
-
+    st.header("PAQ Bot", divider="red")
+    st.markdown('<div class="intro">Welcome to PAQ Bot! This bot can help you with your queries based on the documents you provide. Upload your PDF documents and ask your queries. The bot will try to answer your queries based on the content of the documents. Use the &#39;Reset Bot Memory&#39; button to clear the cache and &#39;Stop App button&#39; to stop the app.</div>', unsafe_allow_html=True)
     # Display chat messages
     for msg in st.session_state["messages"]:
         st.chat_message(msg["role"]).write(msg["content"])
     # Sidebar
     with st.sidebar:
-        st.header("PAQ Bot")
-        st.subheader("Your Documents")
-        pdf_docs = st.file_uploader("Pick a PDF file", type="pdf", accept_multiple_files=True)
+        st.header("PAQ Bot", divider="red")
+        st.subheader("Upload PDF Documents")
+        pdf_docs = st.file_uploader("Pick a pdf file", type="pdf", accept_multiple_files=True)
         if pdf_docs and st.button("Process Documents", key="green"):
             with st.spinner("Processing"):
                 # Get the pdf text
@@ -116,8 +116,7 @@ def main():
                 # Notify user
                 st.success("Done")
         if not pdf_docs:
-            st.info("Please upload a PDF file to start.")
-        st.write("---")
+            st.markdown('<div class="uppdf">Please upload a PDF file to start.</div>', unsafe_allow_html=True)
         st.markdown('<div class="blanki"></div>', unsafe_allow_html=True)
         st.markdown('<div class="luvacm">Made with ❤️ by PEC ACM </div>', unsafe_allow_html=True)
         st.markdown('<a href="https://github.com/Ya-Tin/PDFQueryChatLM.git" class="luvacm">View the source code</a>', unsafe_allow_html=True)

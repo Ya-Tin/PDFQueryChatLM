@@ -1,3 +1,15 @@
+#abd76ff5 {
+    font-size: 4rem;
+    font-weight: 600;
+    background-image: linear-gradient(45deg,  #ff6d4f, #ffffff);
+    color: transparent;
+    background-clip: text;
+    -webkit-background-clip: text;
+    
+}
+.st-emotion-cache-u8hs99 es2srfl1{
+    background-color: #c2fbd7;
+}
 .st-key-green button {
     background-color: #c2fbd7;
     border-radius: 100px;
@@ -127,3 +139,20 @@
     font-family: 'Lato', sans-serif;
 }
 
+.uppdf {
+    font-size: 16px;
+    background-color: #45a049b0;
+    padding: 10px 20px;
+    border-radius: 100px;
+
+    color: #ffffff;
+    font-family: 'Lato', sans-serif;
+}
+
+
+.intro {
+    font-size: 16px;
+    color: #ffffff;
+    font-family: 'Lato', sans-serif;
+    font-weight: bold;
+}
