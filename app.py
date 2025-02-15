@@ -100,17 +100,20 @@ def delete_faiss_index():
                 os.rmdir(os.path.join(root, name))
         if os.path.exists("faiss_index"):
             os.rmdir("faiss_index")
+        delete_query_index()
+        st.success("Cleaned up the cache")
+    else:
+        st.warning("Cache file doesn't exist")
+
+def delete_query_index():
+    if os.path.exists("query_index"):
         for root, dirs, files in os.walk("query_index", topdown=False):
             for name in files:
                 os.remove(os.path.join(root, name))
             for name in dirs:
                 os.rmdir(os.path.join(root, name))
-        if os.path.exists("query_index"):
-            os.rmdir("query_index")
-        st.success("Cleaned up the cache")
-    else:
-        st.warning("Cache file doesn't exist")
-    
+        os.rmdir("query_index")
+
 # Main app
 st.set_page_config(page_title="PAQ Bot", page_icon="🤖")
 css_path = pathlib.Path("style.css")
@@ -119,6 +122,7 @@ if "messages" not in st.session_state:
     st.session_state["messages"] = [
         {"role": "assistant", "content": "How can I help you?"}
     ]
+    delete_query_index()
 # if "chat_history" not in st.session_state:
 #     st.session_state["chat_history"] = []
 st.header("PAQ Bot", divider="red")
@@ -136,7 +140,7 @@ with st.sidebar:
             raw_text = get_pdf_text(pdf_docs)
             text_chunks = chonky(raw_text)
             vector_store = get_vectorstore(text_chunks)
-            st.success("Done")
+            st.markdown('<div class="uppdf">Done</div>', unsafe_allow_html=True)
     if not pdf_docs:
         st.markdown('<div class="uppdf">Please upload a PDF file to start.</div>', unsafe_allow_html=True)
     st.markdown('<div class="blanki"></div>', unsafe_allow_html=True)
@@ -145,6 +149,7 @@ with st.sidebar:
     if st.button("Reset Bot Memory", key="red"):
         delete_faiss_index()
     if st.button("Stop App", key="red2"):
+        delete_query_index()
         os._exit(0)    
 # Chat input box
 user_question = st.chat_input("Input your Query here and Press 'Process Query' button")
