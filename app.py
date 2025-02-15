@@ -40,6 +40,12 @@ def get_vectorstore(text_chunks):
     vector_store = FAISS.from_texts(text_chunks, embedding=embeddings)
     vector_store.save_local("faiss_index")
 
+def get_doc_vectorstore():
+    if not os.path.exists("faiss_index"):
+        return None
+    embeddings = GoogleGenerativeAIEmbeddings(model="models/embedding-001")
+    return FAISS.load_local("faiss_index", embeddings, allow_dangerous_deserialization=True)
+
 def get_query_vectorstore():
     if not os.path.exists("query_index"):
         return None
@@ -58,52 +64,54 @@ def save_query_embedding(query):
 def get_conversational_chain():
     model = ChatGoogleGenerativeAI(model="gemini-pro", temperature=0.7)
     prompt = ChatPromptTemplate.from_template("""
+    Try using Context or the Past Queries sent by User in this session for finding answer, but if the answer is not available in the context, reply with "Not enough information is available in the documents provided, but I can get an answer based on the Internet knowledge" and generate a response using Internet data.
     Context:
     {context}
-    Question: 
-    {question}
-    Chat Past Queries and Information:
-    {query}                                      
+    Past Queries sent by User in this session:
+    {query}     
+    Question:
+    {question}                                 
     """)
     chain = create_stuff_documents_chain(model, prompt)
     return chain
 
 def user_input(user_question):
-    embeddings = GoogleGenerativeAIEmbeddings(model="models/embedding-001")
-    new_db = FAISS.load_local("faiss_index", embeddings, allow_dangerous_deserialization=True)
+    new_db = get_doc_vectorstore()
     query_db = get_query_vectorstore()
 
-    docs = new_db.similarity_search(user_question)
+    docs = new_db.similarity_search(user_question) if new_db else []
     query = query_db.similarity_search(user_question) if query_db else []
     chain = get_conversational_chain() 
-    st.session_state["chat_history"].append({"user:", user_question})
+    # st.session_state["chat_history"].append({"user:", user_question})
 
     response = chain.invoke(
-        {"context": docs, "question": user_question, "query": query}
+        {"context": docs, "query": query, "question": user_question}
     )
-    st.session_state["chat_history"].append({"bot": response})
+    # st.session_state["chat_history"].append({"bot": response})
     save_query_embedding(user_question)
     return response
 
 def delete_faiss_index():
-    if os.path.exists("faiss_index"):
+    if os.path.exists("faiss_index") or os.path.exists("query_index"):
         for root, dirs, files in os.walk("faiss_index", topdown=False):
             for name in files:
                 os.remove(os.path.join(root, name))
             for name in dirs:
                 os.rmdir(os.path.join(root, name))
-        os.rmdir("faiss_index")
-        if os.path.exists("query_index"):
-            for root, dirs, files in os.walk("query_index", topdown=False):
-                for name in files:
-                    os.remove(os.path.join(root, name))
+        if os.path.exists("faiss_index"):
+            os.rmdir("faiss_index")
+        for root, dirs, files in os.walk("query_index", topdown=False):
+            for name in files:
+                os.remove(os.path.join(root, name))
             for name in dirs:
                 os.rmdir(os.path.join(root, name))
-        os.rmdir("query_index")
+        if os.path.exists("query_index"):
+            os.rmdir("query_index")
         st.success("Cleaned up the cache")
     else:
         st.warning("Cache file doesn't exist")
     
+# Main app
 st.set_page_config(page_title="PAQ Bot", page_icon="🤖")
 css_path = pathlib.Path("style.css")
 load_css(css_path)
@@ -111,9 +119,8 @@ if "messages" not in st.session_state:
     st.session_state["messages"] = [
         {"role": "assistant", "content": "How can I help you?"}
     ]
-if "chat_history" not in st.session_state:
-    st.session_state["chat_history"] = []
-
+# if "chat_history" not in st.session_state:
+#     st.session_state["chat_history"] = []
 st.header("PAQ Bot", divider="red")
 st.markdown('<div class="intro">Welcome to PAQ Bot! This bot can help you with your queries based on the documents you provide. Upload your PDF documents and ask your queries. The bot will try to answer your queries based on the content of the documents. Use the &#39;Reset Bot Memory&#39; button to clear the cache and &#39;Stop App button&#39; to stop the app.</div>', unsafe_allow_html=True)
 # Display chat messages
@@ -126,13 +133,9 @@ with st.sidebar:
     pdf_docs = st.file_uploader("Pick a pdf file", type="pdf", accept_multiple_files=True)
     if pdf_docs and st.button("Process Documents", key="green"):
         with st.spinner("Processing"):
-            # Get the pdf text
             raw_text = get_pdf_text(pdf_docs)
-            # Get the text chunks
             text_chunks = chonky(raw_text)
-            # Create the vector store
             vector_store = get_vectorstore(text_chunks)
-            # Notify user
             st.success("Done")
     if not pdf_docs:
         st.markdown('<div class="uppdf">Please upload a PDF file to start.</div>', unsafe_allow_html=True)
@@ -142,8 +145,7 @@ with st.sidebar:
     if st.button("Reset Bot Memory", key="red"):
         delete_faiss_index()
     if st.button("Stop App", key="red2"):
-        os._exit(0)
-    
+        os._exit(0)    
 # Chat input box
 user_question = st.chat_input("Input your Query here and Press 'Process Query' button")
 if user_question:
@@ -151,8 +153,6 @@ if user_question:
     st.session_state["messages"].append({"role": "user", "content": user_question})        
     # Display user message immediately
     st.chat_message("user").markdown(user_question)
-        
-    # Generate response
     with st.spinner("Generating response..."):
             response = user_input(user_question)
         
