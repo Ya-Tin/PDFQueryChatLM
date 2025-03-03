@@ -65,7 +65,7 @@ def save_query_embedding(query):
 def get_conversational_chain():
     model = ChatGoogleGenerativeAI(model="gemini-1.5-pro", temperature=0.7)
     prompt = ChatPromptTemplate.from_template("""
-     Try using Context or the Past Queries sent by User in this session for finding answer, but if the answer is not available in the context, reply with "Not enough information is available in the documents provided, but I can get an answer based on the Internet knowledge" and generate a response using Internet data.
+     Try using Context or the Past Queries sent by User in this session for finding answer, but if the answer is not available in the context, reply with "Not enough information is available in the documents provided, but I can get an answer based on the Internet knowledge." and generate a response using Internet data.
     Context:
     {context}
     Past Queries sent by User in this session:
@@ -146,7 +146,7 @@ with st.sidebar:
         st.markdown('<div class="uppdf">Please upload a PDF file to start</div>', unsafe_allow_html=True)
     st.markdown('<div class="blanki"></div>', unsafe_allow_html=True)
     st.markdown('<div class="luvacm">Made with ❤️ by PEC ACM </div>', unsafe_allow_html=True)
-    st.markdown('<a href="https://github.com/Ya-Tin/PDFQueryChatLM.git" class="luvacm">View the source code</a>', unsafe_allow_html=True)
+    st.link_button("View the source code", "https://github.com/Ya-Tin/PDFQueryChatLM.git")
     if st.button("Reset Bot Memory", key="red"):
         delete_faiss_index()
     if st.button("Stop App", key="red2"):
