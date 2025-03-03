@@ -9,6 +9,7 @@ from langchain_community.vectorstores import FAISS
 from langchain_google_genai import GoogleGenerativeAIEmbeddings, ChatGoogleGenerativeAI
 import google.generativeai as genai
 import pathlib
+import re
 
 load_dotenv()
 os.getenv("GOOGLE_API_KEY")
@@ -136,13 +137,13 @@ with st.sidebar:
     st.subheader("Upload PDF Documents")
     pdf_docs = st.file_uploader("Pick a pdf file", type="pdf", accept_multiple_files=True)
     if pdf_docs and st.button("Process Documents", key="green"):
-        with st.spinner("Processing"):
+        with st.spinner("Processing", show_time=True):
             raw_text = get_pdf_text(pdf_docs)
             text_chunks = chonky(raw_text)
             vector_store = get_vectorstore(text_chunks)
-            st.markdown('<div class="uppdf">Done</div>', unsafe_allow_html=True)
+            st.markdown('<div class="donepdf">Done</div>', unsafe_allow_html=True)
     if not pdf_docs:
-        st.markdown('<div class="uppdf">Please upload a PDF file to start.</div>', unsafe_allow_html=True)
+        st.markdown('<div class="uppdf">Please upload a PDF file to start</div>', unsafe_allow_html=True)
     st.markdown('<div class="blanki"></div>', unsafe_allow_html=True)
     st.markdown('<div class="luvacm">Made with ❤️ by PEC ACM </div>', unsafe_allow_html=True)
     st.markdown('<a href="https://github.com/Ya-Tin/PDFQueryChatLM.git" class="luvacm">View the source code</a>', unsafe_allow_html=True)
@@ -162,5 +163,7 @@ if user_question:
             response = user_input(user_question)
         
         # Append assistant's response and display it
+    unwanted_line_pattern = r"Not enough information is available in the documents provided, but I can get an answer based on the Internet knowledge."
+    response = re.sub(unwanted_line_pattern, "", response)
     st.session_state["messages"].append({"role": "assistant", "content": response})
     st.chat_message("assistant").markdown(response)

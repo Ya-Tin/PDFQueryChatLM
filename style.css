@@ -144,11 +144,21 @@
     background-color: #45a049b0;
     padding: 10px 10px;
     border-radius: 100px;
-
+    text-align: center;
     color: #ffffff;
     font-family: 'Lato', sans-serif;
 }
 
+.donepdf {
+    font-size: 16px;
+    background-color: #45a049b0;
+    padding: 10px 10px;
+    border-radius: 100px;
+    max-width: 80px;
+    text-align: center;
+    color: #ffffff;
+    font-family: 'Lato', sans-serif;
+}
 
 .intro {
     font-size: 16px;
