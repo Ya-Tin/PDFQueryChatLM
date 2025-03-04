@@ -159,7 +159,7 @@ if user_question:
     st.session_state["messages"].append({"role": "user", "content": user_question})        
     # Display user message immediately
     st.chat_message("user").markdown(user_question)
-    with st.spinner("Generating response..."):
+    with st.spinner("Generating response...", show_time=True):
             response = user_input(user_question)
         
         # Append assistant's response and display it
